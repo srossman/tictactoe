@@ -7,38 +7,42 @@ var buttonElementRandom = document.getElementById("next");
 var title = document.getElementById("title");
 var board = document.getElementById("board");
 var rows = document.getElementById("rows");
-var validTurn = null;
 
-var token = 1; // Decides who is black and who is white
+var winner = false;
+var validTurn = false;
 
 function setup() {
 	title.innerHTML = "Tic Tac Toe!";
 	boardReset("Here are instructions.");
 	buttonElementRandom.innerHTML = "Play";
-  newBoard();
+	newBoard();
 }
 
 /* Main */
 function main() {
   document.getElementById("status").innerHTML = "Valid";
 
-  while (rows.hasChildNodes()) {   
-    rows.removeChild(rows.firstChild);
-  }
-  
-  //Player Inputs
-  var x_input = document.getElementById('x').value;
-  var y_input = document.getElementById('y').value;
-  
-  validTurn=validateTurn(x_input,y_input);
-  
-  if (validTurn==true) {
-    players_turn(x_input,y_input);
+  if(winner==false && fullBoard()==false){
+    while (rows.hasChildNodes()) {
+      rows.removeChild(rows.firstChild);
+    }
+	if(winner==false){
+		players_turn()
+		winner = didIWin(turns);
+	}
+	if(validTurn==true && winner==false){
+		cpuTurn();
+		winner = didIWin(turns);
+	}
+	
+	if(winner==true){
+		document.getElementById("status").innerHTML = "Winner!";
+	}
+	
     buildBoard();
   }
   else {
-    buildBoard();
-    document.getElementById("status").innerHTML = "Invalid";
+	  // Reload page or something
   }
 }
 
@@ -70,23 +74,91 @@ function validateTurn(x,y) {
   }
 }
 
-function players_turn(x,y) {
-  if (turns[x][y] == "e") {
-    turns[x][y] = classes[token];
-    if (token==1) {
-      token = 2;
-      console.log("switched");
-    } else {
-      token = 1;
+function players_turn() {
+  validTurn = false;
+
+  console.log(validTurn);
+  
+  var x_input = document.getElementById('x').value;
+  var y_input = document.getElementById('y').value;
+  validTurn=validateTurn(x_input,y_input);
+  
+  if(validTurn==true){
+    if (turns[x_input][y_input] == "e") {
+      turns[x_input][y_input] = classes[2];
+      }
+    else {
+      document.getElementById("status").innerHTML = "Taken";
+      validTurn = false;
     }
-
-  } else {
-    document.getElementById("status").innerHTML = "Taken";
   }
-  console.log("------------------------");
-  console.log(turns);
+  else{
+    document.getElementById("status").innerHTML = "Invalid";
+  }
+}
 
-  didIWin(); // CHECK FOR WINNER
+function cpuTurn(){
+  var testingTurns = turns;
+  var proxyWinner = false;
+  var turnCount = 0;
+
+  // SOMETHING THAT REPLACES MOVE THING
+  for(let row=0;row<3;row++){
+    for(let col=0;col<3;col++){
+      if(testingTurns[row][col]=="e"){
+        testingTurns[row][col] = classes[1];
+		proxyWinner = didIWin(testingTurns);
+        if(proxyWinner==true && turnCount==0){
+          turns[row][col] = classes[1];
+          console.log(turns);
+		  turnCount++;
+          break; // So the Col for loop stops
+        }
+        else{
+          testingTurns[row][col] = classes[0];
+        }
+      }
+    }
+    if(proxyWinner==true){ //So the Row for loop stops
+      break;
+    }
+  }
+  // This for loop is to make sure white doesn't win
+  for(let row=0;row<3;row++){
+    for(let col=0;col<3;col++){
+      if(testingTurns[row][col]=="e"){
+        testingTurns[row][col] = classes[2];
+		proxyWinner = didIWin(testingTurns);
+        if(proxyWinner==true && turnCount==0){
+          turns[row][col] = classes[1];
+          console.log(turns + "Winning move");
+		  turnCount++;
+          break; // So the Col for loop stops
+        }
+        else{
+          testingTurns[row][col] = classes[0];
+        }
+      }
+    }
+  }
+  
+  if(proxyWinner==false && turnCount==0){
+	  randomCPU();
+  }
+}
+
+function randomCPU(){
+  var randomCPU_x = Math.floor(Math.random()*3);
+  var randomCPU_y = Math.floor(Math.random()*3);
+
+  while (turns[randomCPU_x][randomCPU_y]!=classes[0]){
+    randomCPU_x = Math.floor(Math.random()*3);
+    randomCPU_y = Math.floor(Math.random()*3);
+  }
+  turns[randomCPU_x][randomCPU_y] = classes[1];
+
+  //var randomCPU_array = [randomCPU_x,randomCPU_y];
+  //return randomCPU_array;
 }
 
 function buildBoard(){
@@ -108,22 +180,48 @@ function buildBoard(){
 	}
 }
 
+function fullBoard(){
+	var counter=0;
+	for(let row=0;row<3;row++){
+		for(let col=0;col<3;col++){
+			if(turns[row][col]=="e"){
+				counter++;
+			}
+		}
+	}
+	if(counter==0){
+		return true;
+	}
+	else {
+		return false;
+	}	
+}
+
 // ADD BOOLEAN GLOBAL THAT EXITS GAME IF WINNER
-function didIWin(){
+function didIWin(array){
+	var proxyWinner = false;
   for (let row=0;row<3;row++){
     for (let col=0;col<3;col++){
-      if (turns[row][col]==turns[row][0]&&turns[row][col]==turns[row][1]&&turns[row][col]==turns[row][2]&&turns[row][col]!=classes[0]){
-        if (token==2) console.log("Black won!");
+      if (array[row][0]==array[row][1]&&array[row][1]==array[row][2]&&array[row][col]!="e"){
+        if (array[row][col]=="b") console.log("Black won!");
         else console.log("White won!");
-        document.getElementById("status").innerHTML = "Winner!";
+        console.log(row + "row wins!" + array);
+        proxyWinner=true;
+        break;
       }
-      if (turns[0][col]==turns[1][col]&&turns[1][col]==turns[2][col]&&turns[row][col]!="e"){
-        if (token==2) console.log("Black won!");
+      if (array[0][col]==array[1][col]&&array[1][col]==array[2][col]&&array[row][col]!="e"){
+        if (array[row][col]=="b") console.log("Black won!");
         else console.log("White won!");
-        document.getElementById("status").innerHTML = "Winner!";
+        console.log(col + "column wins!" + array);
+        proxyWinner=true;
+        break;
       }
     }
+    if(proxyWinner==true){
+      break;
+    }
   }
+  return proxyWinner;
 }
 
 function boardReset(message){
