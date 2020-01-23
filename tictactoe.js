@@ -9,7 +9,10 @@ var board = document.getElementById("board");
 var rows = document.getElementById("rows");
 
 var winner = false;
+var coordinates = [];
 var validTurn = false;
+
+var listCounter = 1;
 
 function setup() {
 	title.innerHTML = "Tic Tac Toe!";
@@ -26,23 +29,23 @@ function main() {
     while (rows.hasChildNodes()) {
       rows.removeChild(rows.firstChild);
     }
-	if(winner==false){
-		players_turn()
-		winner = didIWin(turns);
-	}
-	if(validTurn==true && winner==false){
-		cpuTurn();
-		winner = didIWin(turns);
-	}
-	
-	if(winner==true){
-		document.getElementById("status").innerHTML = "Winner!";
-	}
-	
-    buildBoard();
+    if(winner==false && fullBoard()==false){
+      players_turn()
+      winner = didIWin(turns);
+    }
+    if(winner==false && fullBoard()==false && validTurn!=false){
+      cpuTurn();
+      winner = didIWin(turns);
+    }
+    
+    if(winner==true){
+      document.getElementById("status").innerHTML = "Winner!";
+    }
+      buildBoard();
   }
   else {
 	  // Reload page or something
+    location.reload();
   }
 }
 
@@ -74,26 +77,22 @@ function validateTurn(x,y) {
   }
 }
 
-function players_turn() {
-  validTurn = false;
+function clickyFunction(x){
+  var indexingList = [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]];
+  coordinates = indexingList[x-1];
+}
 
-  console.log(validTurn);
-  
-  var x_input = document.getElementById('x').value;
-  var y_input = document.getElementById('y').value;
-  validTurn=validateTurn(x_input,y_input);
-  
-  if(validTurn==true){
-    if (turns[x_input][y_input] == "e") {
-      turns[x_input][y_input] = classes[2];
-      }
-    else {
-      document.getElementById("status").innerHTML = "Taken";
-      validTurn = false;
+function players_turn() {
+  x_input = coordinates[0];
+  y_input = coordinates[1];
+
+  if (turns[x_input][y_input] == "e") {
+    turns[x_input][y_input] = classes[2];
+    validTurn=true;
     }
-  }
-  else{
-    document.getElementById("status").innerHTML = "Invalid";
+  else {
+    document.getElementById("status").innerHTML = "Taken";
+    validTurn = false;
   }
 }
 
@@ -162,6 +161,7 @@ function randomCPU(){
 }
 
 function buildBoard(){
+  listCounter = 1;
 	for (let row=0;row<3;row++){
     var rowNode = document.createElement("ul");
     rowNode.className = "row";
@@ -174,6 +174,8 @@ function buildBoard(){
       var turnNode = document.createElement("li");
       // look up and add class
       turnNode.setAttribute("class", turns[row][col]);
+      turnNode.setAttribute("onclick", "clickyFunction(" + listCounter + ")")
+      listCounter++;
       // add LI to row
 	    newRow.appendChild(turnNode);
 	  }
